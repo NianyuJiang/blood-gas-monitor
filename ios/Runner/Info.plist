@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSCameraUsageDescription</key>
+	<string>BloodGas uses the camera to scan device and material QR codes.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>BloodGas uses Bluetooth Low Energy to connect to sensor devices and read live measurements.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>BloodGas uses Bluetooth Low Energy to connect to sensor devices and read live measurements.</string>
+	<!-- ── Keep logging while the phone is locked / asleep ────────────────
+	     Without this, iOS suspends the app a few seconds after the screen
+	     locks and BLE notifications from an already-connected sensor stop
+	     arriving, so nothing gets recorded until the phone is unlocked
+	     again. "bluetooth-central" is Apple's supported background mode
+	     for apps that are a BLE CENTRAL (i.e. connect out to peripherals,
+	     which is exactly what this app does) — it keeps the app alive so
+	     already-subscribed characteristic notifications keep being
+	     delivered (and therefore keep being written to the CSV) while
+	     locked, same as a CGM or fitness-tracker app. It does NOT keep the
+	     screen on — the phone can still lock normally, data just keeps
+	     flowing underneath. iOS may still deliver samples in occasional
+	     small bursts rather than perfectly evenly spaced while backgrounded
+	     — that's an OS-level scheduling detail, not lost data. Android has
+	     no equivalent key; it already keeps a connected GATT link and its
+	     notifications alive by default when locked. -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>bluetooth-central</string>
+	</array>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>BloodGas</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>blood_gas_monitor</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(FLUTTER_BUILD_NAME)</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<!-- ── iOS analogue of the Android public-storage mirror ─────────────
+	     Android backs up finished recordings to a public Documents folder
+	     that survives uninstall (see backup_store.dart / BackupStore).
+	     iOS has no public shared-storage volume — apps are sandboxed — so
+	     backup_store.dart already falls back to the app's own Application
+	     Documents directory on this platform (Platform.isAndroid check).
+	     These two keys are what make that same folder visible and pullable
+	     from the Files app under "On My iPhone/iPad → BloodGas", without
+	     requiring any runtime permission prompt. This is additive only —
+	     it does not change any Dart logic or the Android build. -->
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
+		<dict>
+			<key>UIWindowSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneClassName</key>
+					<string>UIWindowScene</string>
+					<key>UISceneConfigurationName</key>
+					<string>flutter</string>
+					<key>UISceneDelegateClassName</key>
+					<string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
+					<key>UISceneStoryboardFile</key>
+					<string>Main</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+</dict>
+</plist>

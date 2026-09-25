@@ -1,0 +1,57 @@
+# ════════════════════════════════════════════════════════════════════════
+#  pubspec.yaml
+#  Confidence: MEDIUM-HIGH
+#    - The 9 packages match what was in this conversation's pubspec.yaml
+#    - HOWEVER, your latest ble_manager.dart (from the other conversation)
+#      uses AES encryption via pointycastle — so you LIKELY need to add
+#      pointycastle here. If your APK was built with the AES code working,
+#      then pointycastle must have been in the deps.
+#    - You mentioned `equatable` is in your APK's 9 packages list. That
+#      strongly suggests pointycastle IS there (equatable is a transitive
+#      dep of pointycastle's collection subdependency). Add pointycastle
+#      and run `flutter pub get`, then check pubspec.lock — equatable
+#      should appear there as transitive.
+# ════════════════════════════════════════════════════════════════════════
+name: blood_gas_monitor
+description: "BloodGas — real-time pO2 / pCO2 / pH / temperature monitoring app (BG_MINI sensors)"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_blue_plus: ^1.35.3
+  fl_chart: ^0.69.0
+  permission_handler: ^11.3.1
+  path_provider: ^2.1.4
+  intl: ^0.19.0
+  open_file: ^3.5.10
+  share_plus: ^10.1.0
+  shared_preferences: ^2.3.2
+  mobile_scanner: ^7.0.0
+  pointycastle: ^3.9.1     # ← Required by AES code in ble_manager.dart
+  cupertino_icons: ^1.0.8
+  google_fonts: ^6.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.14.3
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icon/
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  image_path: "assets/icon/icon.png"
+  adaptive_icon_background: "#0A0E1A"
+  adaptive_icon_foreground: "assets/icon/icon_foreground.png"
+  min_sdk_android: 21

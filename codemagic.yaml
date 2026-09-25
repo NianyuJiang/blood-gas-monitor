@@ -1,0 +1,121 @@
+﻿workflows:
+  ios-sideload-unsigned:
+    name: BloodGas — iOS unsigned build (for free-account sideloading)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+
+    scripts:
+      - name: Disable Swift Package Manager (force classic CocoaPods)
+        script: |
+          flutter config --no-enable-swift-package-manager
+
+      - name: Get Flutter packages
+        script: |
+          flutter clean
+          flutter packages pub get
+
+      - name: Install CocoaPods dependencies (clean slate)
+        script: |
+          cd ios
+          rm -rf Pods Podfile.lock .symlinks
+          pod install --repo-update
+          cd ..
+
+      - name: Flutter build (no code signing)
+        script: |
+          # `flutter build ios --release --no-codesign` actually runs
+          # xcodebuild successfully (see "Xcode build done." in the log)
+          # but THEN fails its own separate post-build check — Flutter's
+          # tool still demands a selected Development Team when preparing
+          # an ios-release build for a physical device, even with
+          # --no-codesign (a known Flutter regression, still open as of
+          # this writing). Work around it by only having Flutter prepare
+          # the Xcode project (Generated.xcconfig, Flutter.framework,
+          # CocoaPods) via --config-only — which does none of that
+          # check — then drive the real build ourselves with xcodebuild,
+          # passing the code-signing-disable settings straight on the
+          # command line (these always win over project/pod settings).
+          flutter build ios --release --no-codesign --config-only
+
+          xcodebuild \
+            -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -sdk iphoneos \
+            -configuration Release \
+            -derivedDataPath build/ios/archive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            EXPANDED_CODE_SIGN_IDENTITY=- \
+            build
+
+      - name: Package as an unsigned .ipa
+        script: |
+          mkdir -p Payload
+          cp -r build/ios/archive/Build/Products/Release-iphoneos/Runner.app Payload/
+          zip -r blood_gas_monitor-unsigned.ipa Payload
+
+    artifacts:
+      - blood_gas_monitor-unsigned.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      email:
+        recipients:
+          - jiangnianyu1994@gmail.com
+        notify:
+          success: true
+          failure: true
+
+  ios-store-signed:
+    name: BloodGas — iOS signed build (requires paid Apple Developer account)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      ios_signing:
+        distribution_type: ad_hoc
+        bundle_identifier: "com.example.bloodGasMonitor"
+      vars:
+        XCODE_WORKSPACE: "ios/Runner.xcworkspace"
+        XCODE_SCHEME: "Runner"
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    integrations:
+      app_store_connect: app_store_connect_ios
+    scripts:
+      - name: Disable Swift Package Manager (force classic CocoaPods)
+        script: flutter config --no-enable-swift-package-manager
+      - name: Fetch signing files from App Store Connect
+        script: xcode-project use-profiles
+      - name: Get Flutter packages
+        script: |
+          flutter clean
+          flutter packages pub get
+      - name: Install CocoaPods dependencies (clean slate)
+        script: |
+          cd ios
+          rm -rf Pods Podfile.lock .symlinks
+          pod install --repo-update
+          cd ..
+      - name: Flutter build ipa
+        script: |
+          flutter build ipa --release \
+            --export-options-plist=/Users/builder/export_options.plist
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      email:
+        recipients:
+          - jiangnianyu1994@gmail.com
